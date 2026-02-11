@@ -9,6 +9,7 @@ class UserProfile(models.Model):
     profile_picture = models.ImageField(
         upload_to='profiles/', blank=True, null=True
     )
+    profile_picture_url = models.URLField(blank=True, null=True)
     location = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
@@ -90,12 +91,22 @@ class Experience(models.Model):
         return f"{self.job_title} at {self.company_name}"
 
 class ContactMessage(models.Model):
+    STATUS = [
+        ('new', 'New'),
+        ('progress', 'In progress'),
+        ('responded', 'Responded'),
+    ]
+
     sender_name = models.CharField(max_length=100)
     sender_email = models.EmailField()
     subject = models.CharField(max_length=200)
     message_content = models.TextField()
     received_date = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
+    response_status = models.CharField(
+        max_length=12, choices=STATUS, default='new'
+    )
+    response_text = models.TextField(blank=True)
     ip_address = models.GenericIPAddressField(
         null=True, blank=True
     )

@@ -8,6 +8,7 @@ router.register(r'projects', ProjectViewSet)
 router.register(r'skills', SkillViewSet)
 router.register(r'experience', ExperienceViewSet)
 router.register(r'messages', ContactMessageViewSet)
+router.register(r'technologies', TechnologyViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

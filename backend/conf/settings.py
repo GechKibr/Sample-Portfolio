@@ -15,7 +15,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
-    "https://8000-cs-470500727677-default.cs-europe-west1-haha.cloudshell.dev",
+    "https://urban-yodel-694xrqwx6jv5h5xvr-8000.app.github.dev/",
 ]
 
 
