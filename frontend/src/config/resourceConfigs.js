@@ -24,13 +24,21 @@ export const resourceConfigs = [
     title: 'Projects',
     endpoint: 'projects',
     fields: [
-      { name: 'user', label: 'Profile', type: 'number' },
+      {
+        name: 'user',
+        label: 'Profile',
+        type: 'relation',
+        optionsEndpoint: 'profile',
+        optionLabel: 'full_name',
+      },
       { name: 'title', label: 'Title', type: 'text' },
       { name: 'description', label: 'Description', type: 'textarea' },
       {
         name: 'technologies',
-        label: 'Technologies (comma-separated)',
-        type: 'array',
+        label: 'Technologies',
+        type: 'multi-select',
+        optionsEndpoint: 'technologies',
+        optionLabel: 'name',
       },
       { name: 'live_link', label: 'Live URL', type: 'text' },
       { name: 'github_link', label: 'GitHub URL', type: 'text' },
@@ -43,7 +51,13 @@ export const resourceConfigs = [
     title: 'Skills',
     endpoint: 'skills',
     fields: [
-      { name: 'user', label: 'Profile', type: 'number' },
+      {
+        name: 'user',
+        label: 'Profile',
+        type: 'relation',
+        optionsEndpoint: 'profile',
+        optionLabel: 'full_name',
+      },
       { name: 'name', label: 'Skill name', type: 'text' },
       {
         name: 'proficiency_level',
@@ -64,7 +78,13 @@ export const resourceConfigs = [
     title: 'Experience',
     endpoint: 'experience',
     fields: [
-      { name: 'user', label: 'Profile', type: 'number' },
+      {
+        name: 'user',
+        label: 'Profile',
+        type: 'relation',
+        optionsEndpoint: 'profile',
+        optionLabel: 'full_name',
+      },
       { name: 'job_title', label: 'Job title', type: 'text' },
       { name: 'company_name', label: 'Company name', type: 'text' },
       { name: 'start_date', label: 'Start date', type: 'date' },

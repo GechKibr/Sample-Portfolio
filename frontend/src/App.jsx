@@ -22,9 +22,6 @@ const AdminApp = () => {
   const [userLabel, setUserLabel] = useState(() =>
     localStorage.getItem('adminUser')
   )
-  const [isSidebarCompact, setIsSidebarCompact] = useState(() =>
-    localStorage.getItem('sidebarCompact') === 'true'
-  )
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const stored = Number(localStorage.getItem('sidebarWidth'))
     return Number.isNaN(stored) || stored === 0 ? 220 : stored
@@ -49,9 +46,6 @@ const AdminApp = () => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light')
   }, [isDarkMode])
 
-  useEffect(() => {
-    localStorage.setItem('sidebarCompact', String(isSidebarCompact))
-  }, [isSidebarCompact])
 
   useEffect(() => {
     const clamped = Math.min(Math.max(sidebarWidth, 180), 300)
@@ -124,10 +118,6 @@ const AdminApp = () => {
               activeResource={activeResource}
               onSelect={setActiveResource}
               userLabel={userLabel}
-              isCompact={isSidebarCompact}
-              onToggleCompact={() =>
-                setIsSidebarCompact((prev) => !prev)
-              }
               sidebarWidth={sidebarWidth}
               onWidthChange={setSidebarWidth}
             />

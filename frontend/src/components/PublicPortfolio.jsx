@@ -302,14 +302,21 @@ const PublicPortfolio = () => {
                         <p className="text-xs uppercase tracking-widest text-slate-400">
                           {category}
                         </p>
-                        <div className="mt-2 flex flex-wrap gap-2">
+                        <div className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                           {items.map((skill) => (
-                            <span
+                            <div
                               key={skill.id}
-                              className="px-3 py-1 rounded-full bg-slate-800 text-sm text-slate-200"
+                              className="flex items-center gap-5 rounded-[28px] bg-slate-800 px-6 py-5 text-lg text-slate-100"
                             >
-                              {skill.name}
-                            </span>
+                              {skill.certification_url ? (
+                                <img
+                                  src={skill.certification_url}
+                                  alt={skill.name}
+                                  className="h-32 w-32 rounded-[280px] object-cover"
+                                />
+                              ) : null}
+                              <span className="text-xl font-semibold">{skill.name}</span>
+                            </div>
                           ))}
                         </div>
                       </div>

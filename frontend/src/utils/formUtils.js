@@ -13,6 +13,8 @@ export const emptyFormFor = (fields) =>
       acc[field.name] = false
     } else if (field.type === 'file') {
       acc[field.name] = null
+    } else if (field.type === 'multi-select') {
+      acc[field.name] = []
     } else {
       acc[field.name] = ''
     }
@@ -40,6 +42,11 @@ export const buildPayload = (fields, form) => {
       acc[field.name] = Number.isNaN(parsed) ? null : parsed
       return acc
     }
+    if (field.type === 'relation') {
+      const parsed = Number(rawValue)
+      acc[field.name] = Number.isNaN(parsed) ? null : parsed
+      return acc
+    }
     if (field.type === 'checkbox') {
       acc[field.name] = Boolean(rawValue)
       return acc
@@ -50,6 +57,16 @@ export const buildPayload = (fields, form) => {
     }
     if (field.type === 'array') {
       acc[field.name] = parseArrayInput(rawValue)
+      return acc
+    }
+    if (field.type === 'multi-select') {
+      if (Array.isArray(rawValue)) {
+        acc[field.name] = rawValue
+          .map((value) => Number(value))
+          .filter((value) => !Number.isNaN(value))
+      } else {
+        acc[field.name] = parseArrayInput(rawValue)
+      }
       return acc
     }
     if (fileLikeFields.has(field.name)) {
@@ -71,6 +88,12 @@ export const formatFieldValue = (field, value) => {
   }
   if (field.type === 'file') {
     return null
+  }
+  if (field.type === 'relation') {
+    return value === null || value === undefined ? '' : String(value)
+  }
+  if (field.type === 'multi-select') {
+    return Array.isArray(value) ? value.map((item) => String(item)) : []
   }
   return String(value)
 }

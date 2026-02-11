@@ -10,10 +10,8 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
   const [formState, setFormState] = useState(() =>
     emptyFormFor(resource.fields)
   )
-  const [visibleColumns, setVisibleColumns] = useState({})
-  const [columnWidths, setColumnWidths] = useState({})
-  const [showTableOptions, setShowTableOptions] = useState(true)
   const isMessageResource = resource.key === 'messages'
+  const [fieldOptions, setFieldOptions] = useState({})
 
   const apiFetch = async (path, options = {}) => {
     const headers = new Headers(options.headers || {})
@@ -60,35 +58,65 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
   }, [resource.endpoint])
 
   useEffect(() => {
-    const stored = localStorage.getItem(`tableSettings:${resource.key}`)
-    const parsed = stored ? JSON.parse(stored) : {}
-    const nextVisible = {}
-    const nextWidths = {}
+    const loadOptions = async () => {
+      const optionFields = resource.fields.filter(
+        (field) => field.optionsEndpoint
+      )
+      if (optionFields.length === 0) {
+        setFieldOptions({})
+        return
+      }
 
-    resource.fields.forEach((field) => {
-      nextVisible[field.name] =
-        parsed.visibleColumns?.[field.name] ?? true
-      nextWidths[field.name] = parsed.columnWidths?.[field.name] ?? 180
-    })
+      try {
+        const entries = await Promise.all(
+          optionFields.map(async (field) => {
+            const data = await apiFetch(
+              `${apiBase}/${field.optionsEndpoint}/`
+            )
+            return [field.name, Array.isArray(data) ? data : []]
+          })
+        )
+        setFieldOptions(Object.fromEntries(entries))
+      } catch (err) {
+        setFieldOptions({})
+      }
+    }
 
-    setShowTableOptions(parsed.showTableOptions ?? true)
-
-    setVisibleColumns(nextVisible)
-    setColumnWidths(nextWidths)
+    loadOptions()
   }, [resource.key])
 
-  useEffect(() => {
-    if (!resource.key) return
-    localStorage.setItem(
-      `tableSettings:${resource.key}`,
-      JSON.stringify({ visibleColumns, columnWidths, showTableOptions })
-    )
-  }, [resource.key, visibleColumns, columnWidths, showTableOptions])
+  const visibleFields = useMemo(() => resource.fields, [resource.fields])
 
-  const visibleFields = useMemo(
-    () => resource.fields.filter((field) => visibleColumns[field.name]),
-    [resource.fields, visibleColumns]
-  )
+  const getOptionLabel = (field, option) => {
+    if (!option) return ''
+    return option[field.optionLabel] || option.name || String(option.id)
+  }
+
+  const getOptionValue = (option) => option?.id
+
+  const formatDisplayValue = (field, value) => {
+    if (field.type === 'relation') {
+      const options = fieldOptions[field.name] || []
+      const match = options.find((option) => option.id === value)
+      return match ? getOptionLabel(field, match) : String(value ?? '')
+    }
+    if (field.type === 'multi-select') {
+      const options = fieldOptions[field.name] || []
+      if (!Array.isArray(value)) return ''
+      return value
+        .map((item) => options.find((option) => option.id === item))
+        .filter(Boolean)
+        .map((option) => getOptionLabel(field, option))
+        .join(', ')
+    }
+    if (field.type === 'checkbox') {
+      return value ? 'Yes' : 'No'
+    }
+    if (Array.isArray(value)) {
+      return value.join(', ')
+    }
+    return String(value ?? '')
+  }
 
   const startCreate = () => {
     if (isMessageResource) return
@@ -198,57 +226,6 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
             </button>
           ) : null}
         </div>
-        <div className="mt-6 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700 p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 font-semibold">
-              Table options
-            </p>
-            <button
-              onClick={() => setShowTableOptions((prev) => !prev)}
-              className="text-xs font-semibold text-slate-500 dark:text-slate-300"
-            >
-              {showTableOptions ? 'Hide' : 'Show'}
-            </button>
-          </div>
-          {showTableOptions ? (
-            <div className="mt-4 grid gap-3">
-              {resource.fields.map((field) => (
-                <div key={field.name} className="flex flex-wrap items-center justify-between gap-3">
-                  <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(visibleColumns[field.name])}
-                      onChange={() =>
-                        setVisibleColumns((prev) => ({
-                          ...prev,
-                          [field.name]: !prev[field.name],
-                        }))
-                      }
-                      className="h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-400"
-                    />
-                    {field.label}
-                  </label>
-                  <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                    <span>Width</span>
-                    <input
-                      type="number"
-                      min="120"
-                      max="320"
-                      value={columnWidths[field.name] || 180}
-                      onChange={(event) =>
-                        setColumnWidths((prev) => ({
-                          ...prev,
-                          [field.name]: Number(event.target.value) || 180,
-                        }))
-                      }
-                      className="w-20 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-2 py-1 text-slate-900 dark:text-slate-100"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
         <div className="mt-6 overflow-x-auto">
           <table className="min-w-full text-left text-sm table-fixed">
             <thead className="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">
@@ -257,7 +234,6 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
                   <th
                     key={field.name}
                     className="py-2 pr-4"
-                    style={{ width: `${columnWidths[field.name] || 180}px` }}
                   >
                     {field.label}
                   </th>
@@ -285,15 +261,8 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
                       <td
                         key={field.name}
                         className="py-3 pr-4 text-slate-600 dark:text-slate-300"
-                        style={{ width: `${columnWidths[field.name] || 180}px` }}
                       >
-                        {field.type === 'checkbox'
-                          ? item[field.name]
-                            ? 'Yes'
-                            : 'No'
-                          : Array.isArray(item[field.name])
-                          ? item[field.name].join(', ')
-                          : String(item[field.name] ?? '')}
+                        {formatDisplayValue(field, item[field.name])}
                       </td>
                     ))}
                     <td className="py-3 space-x-2">
@@ -374,6 +343,46 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
                   {field.options.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
+                    </option>
+                  ))}
+                </select>
+              ) : field.type === 'relation' ? (
+                <select
+                  value={formState[field.name]}
+                  onChange={(event) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      [field.name]: event.target.value,
+                    }))
+                  }
+                  disabled={field.readOnly}
+                  className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                >
+                  <option value="">Select</option>
+                  {(fieldOptions[field.name] || []).map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {getOptionLabel(field, option)}
+                    </option>
+                  ))}
+                </select>
+              ) : field.type === 'multi-select' ? (
+                <select
+                  multiple
+                  value={formState[field.name]}
+                  onChange={(event) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      [field.name]: Array.from(event.target.selectedOptions).map(
+                        (option) => option.value
+                      ),
+                    }))
+                  }
+                  disabled={field.readOnly}
+                  className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                >
+                  {(fieldOptions[field.name] || []).map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {getOptionLabel(field, option)}
                     </option>
                   ))}
                 </select>
