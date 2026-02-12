@@ -11,11 +11,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-f%yb$9o2_vzt)e9yv_1l46l0%eyc6)jdx+b6xqi52)nr2pt-cb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False 
 
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
     "https://urban-yodel-694xrqwx6jv5h5xvr-8000.app.github.dev/",
+    "https://sample-portfolio-btku.onrender.com",
+    "https://*.onrender.com",
 ]
 
 

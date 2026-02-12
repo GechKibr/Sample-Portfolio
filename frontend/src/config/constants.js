@@ -1,1 +1,1 @@
-export const API_BASE = '/api/v1'
+export const API_BASE = 'https://sample-portfolio-btku.onrender.com/api/v1'
