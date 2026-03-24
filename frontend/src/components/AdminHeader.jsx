@@ -19,6 +19,7 @@ const AdminHeader = ({ isDarkMode, onToggleTheme, onLogout }) => {
           >
             Public view
           </Link>
+          {/* MY SAMPLE COMMENT FOR TESTING  */}
           <button
             onClick={onToggleTheme}
             className="rounded-full border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:border-slate-900 dark:hover:border-slate-200"
