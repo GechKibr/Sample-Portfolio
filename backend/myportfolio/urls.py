@@ -9,7 +9,9 @@ router.register(r'skills', SkillViewSet)
 router.register(r'experience', ExperienceViewSet)
 router.register(r'messages', ContactMessageViewSet)
 router.register(r'technologies', TechnologyViewSet)
+router.register(r'users', RegisteredUserViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('auth/credentials/', AdminCredentialUpdateView.as_view(), name='admin-credentials-update'),
 ]
