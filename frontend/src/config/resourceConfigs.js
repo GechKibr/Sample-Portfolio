@@ -4,7 +4,13 @@ export const resourceConfigs = [
     title: 'Profiles',
     endpoint: 'profile',
     fields: [
-      { name: 'user', label: 'User', type: 'number' },
+      {
+        name: 'user',
+        label: 'Registered User',
+        type: 'relation',
+        optionsEndpoint: 'users',
+        optionLabel: 'username',
+      },
       { name: 'full_name', label: 'Full name', type: 'text' },
       { name: 'bio_summary', label: 'Bio summary', type: 'textarea' },
       { name: 'resume_link', label: 'Resume URL', type: 'text' },

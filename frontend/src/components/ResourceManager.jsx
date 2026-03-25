@@ -1,7 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { buildPayload, emptyFormFor, formatFieldValue } from '../utils/formUtils'
 
-const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
+const ResourceManager = ({
+  resource,
+  authToken,
+  apiBase,
+  onToast,
+  viewMode = 'default',
+  onCreated,
+}) => {
   const [items, setItems] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -11,9 +18,12 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
     emptyFormFor(resource.fields)
   )
   const isMessageResource = resource.key === 'messages'
+  const isPopupCreateMode = viewMode === 'popup-create'
+  const shouldShowFormPanel =
+    isPopupCreateMode || isMessageResource || Boolean(editingItem)
   const [fieldOptions, setFieldOptions] = useState({})
 
-  const apiFetch = async (path, options = {}) => {
+  const apiFetch = useCallback(async (path, options = {}) => {
     const headers = new Headers(options.headers || {})
     if (authToken) {
       headers.set('Authorization', `Basic ${authToken}`)
@@ -31,16 +41,16 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
       try {
         const data = await response.json()
         message = data.detail || JSON.stringify(data)
-      } catch (err) {
+      } catch {
         message = response.statusText || message
       }
       throw new Error(message)
     }
     if (response.status === 204) return null
     return response.json()
-  }
+  }, [authToken])
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     setIsLoading(true)
     setError('')
     try {
@@ -51,11 +61,11 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [apiBase, apiFetch, resource.endpoint])
 
   useEffect(() => {
     loadItems()
-  }, [resource.endpoint])
+  }, [loadItems])
 
   useEffect(() => {
     const loadOptions = async () => {
@@ -77,13 +87,20 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
           })
         )
         setFieldOptions(Object.fromEntries(entries))
-      } catch (err) {
+      } catch {
         setFieldOptions({})
       }
     }
 
     loadOptions()
-  }, [resource.key])
+  }, [apiBase, apiFetch, resource.fields, resource.key])
+
+  useEffect(() => {
+    if (!isPopupCreateMode || isMessageResource) return
+    setEditingItem(null)
+    setError('')
+    setFormState(emptyFormFor(resource.fields))
+  }, [isMessageResource, isPopupCreateMode, resource.fields, resource.key])
 
   const visibleFields = useMemo(() => resource.fields, [resource.fields])
 
@@ -91,8 +108,6 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
     if (!option) return ''
     return option[field.optionLabel] || option.name || String(option.id)
   }
-
-  const getOptionValue = (option) => option?.id
 
   const formatDisplayValue = (field, value) => {
     if (field.type === 'relation') {
@@ -175,6 +190,9 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
           body: hasFile ? requestBody : JSON.stringify(payload),
         })
         onToast(`${resource.title} created`)
+        if (isPopupCreateMode && typeof onCreated === 'function') {
+          onCreated()
+        }
       } else {
         return
       }
@@ -206,8 +224,17 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr_1.1fr] gap-6">
-      <div className="rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 shadow-lg p-6">
+    <div
+      className={
+        isPopupCreateMode
+          ? ''
+          : shouldShowFormPanel
+            ? 'grid lg:grid-cols-[1fr_1.1fr] gap-6'
+            : ''
+      }
+    >
+      {!isPopupCreateMode ? (
+      <div className="rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 shadow-sm p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="font-display text-2xl text-slate-900 dark:text-slate-100">
@@ -217,14 +244,6 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
               Manage {resource.title.toLowerCase()} data.
             </p>
           </div>
-          {!isMessageResource ? (
-            <button
-              onClick={startCreate}
-              className="rounded-full border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:border-slate-900 dark:hover:border-slate-200"
-            >
-              New entry
-            </button>
-          ) : null}
         </div>
         <div className="mt-6 overflow-x-auto">
           <table className="min-w-full text-left text-sm table-fixed">
@@ -287,8 +306,15 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
             </tbody>
           </table>
         </div>
+        {!shouldShowFormPanel && error ? (
+          <div className="mt-4 rounded-xl bg-rose-50 border border-rose-200 px-4 py-3 text-rose-700 text-sm">
+            {error}
+          </div>
+        ) : null}
       </div>
-      <div className="rounded-3xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 shadow-lg p-6">
+      ) : null}
+      {shouldShowFormPanel ? (
+      <div className="rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 shadow-sm p-6">
         <div className="flex items-center justify-between">
           <h3 className="font-display text-2xl text-slate-900 dark:text-slate-100">
             {editingItem
@@ -463,6 +489,7 @@ const ResourceManager = ({ resource, authToken, apiBase, onToast }) => {
                 : 'Create entry'}
         </button>
       </div>
+      ) : null}
     </div>
   )
 }

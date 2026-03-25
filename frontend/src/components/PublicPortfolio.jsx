@@ -20,6 +20,22 @@ const groupByCategory = (skills) => {
   }, {})
 }
 
+const normalizeAssetUrl = (value) => {
+  if (!value) return null
+  if (/^https?:\/\//i.test(value)) {
+    if (API_BASE.startsWith('https://') && value.startsWith('http://')) {
+      return value.replace('http://', 'https://')
+    }
+    return value
+  }
+
+  const apiOrigin = new URL(API_BASE).origin
+  if (value.startsWith('/')) {
+    return `${apiOrigin}${value}`
+  }
+  return `${apiOrigin}/${value}`
+}
+
 const PublicPortfolio = () => {
   const [profile, setProfile] = useState(null)
   const [projects, setProjects] = useState([])
@@ -27,7 +43,6 @@ const PublicPortfolio = () => {
   const [experience, setExperience] = useState([])
   const [tech, setTech] = useState([])
   const [error, setError] = useState('')
-  const [isDarkMode] = useState(true)
   const [messageStatus, setMessageStatus] = useState('')
   const [messageForm, setMessageForm] = useState({
     sender_name: '',
@@ -53,7 +68,7 @@ const PublicPortfolio = () => {
         setSkills(skillsData)
         setExperience(experienceData)
         setTech(techData)
-      } catch (err) {
+      } catch {
         setError('Unable to load portfolio data. Please try again later.')
       }
     }
@@ -62,12 +77,8 @@ const PublicPortfolio = () => {
   }, [])
 
   useEffect(() => {
-    const root = document.documentElement
-    if (isDarkMode) {
-      root.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    }
-  }, [isDarkMode])
+    document.documentElement.classList.add('dark')
+  }, [])
 
   const handleMessageChange = (field, value) => {
     setMessageForm((prev) => ({
@@ -107,8 +118,9 @@ const PublicPortfolio = () => {
   }
 
   const groupedSkills = useMemo(() => groupByCategory(skills), [skills])
-  const profilePhoto =
+  const profilePhoto = normalizeAssetUrl(
     profile?.profile_photo || profile?.profile_picture_url || profile?.profile_picture || null
+  )
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -166,7 +178,7 @@ const PublicPortfolio = () => {
         </div>
       </header>
       <main className="flex-1">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 space-y-10 sm:space-y-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12 space-y-10 sm:space-y-12">
           <section
             id="overview"
             className="rounded-3xl bg-slate-950/70 border border-slate-800 shadow-2xl p-8 md:p-12"
@@ -226,7 +238,7 @@ const PublicPortfolio = () => {
             </div>
           </section>
 
-          <section className="grid lg:grid-cols-[1.5fr_0.5fr] gap-8" id="projects">
+          <section className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8" id="projects">
             <div className="rounded-3xl bg-slate-950/70 border border-slate-800 shadow-2xl p-8">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-3xl text-slate-100">
@@ -240,48 +252,62 @@ const PublicPortfolio = () => {
                 {projects.length === 0 ? (
                   <p className="text-slate-400">No projects yet.</p>
                 ) : (
-                  projects.map((project) => (
-                    <div
-                      key={project.id}
-                      className="rounded-2xl border border-slate-800 p-5"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-xl font-semibold text-slate-100">
-                          {project.title || 'Untitled Project'}
-                        </h3>
-                        {project.created_at ? (
-                          <span className="text-xs text-slate-400">
-                            {new Date(project.created_at).getFullYear()}
-                          </span>
+                  projects.map((project) => {
+                    const projectImage = normalizeAssetUrl(project.image)
+
+                    return (
+                      <div
+                        key={project.id}
+                        className="rounded-2xl border border-slate-800 p-5"
+                      >
+                        {projectImage ? (
+                          <div className="mb-4 overflow-hidden rounded-xl border border-slate-700">
+                            <img
+                              src={projectImage}
+                              alt={project.title || 'Project image'}
+                              className="h-52 w-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
                         ) : null}
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="text-xl font-semibold text-slate-100">
+                            {project.title || 'Untitled Project'}
+                          </h3>
+                          {project.created_at ? (
+                            <span className="text-xs text-slate-400">
+                              {new Date(project.created_at).getFullYear()}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-2 text-slate-300">
+                          {project.description || ''}
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-3 text-sm">
+                          {project.live_link ? (
+                            <a
+                              className="text-amber-600"
+                              href={project.live_link}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Live
+                            </a>
+                          ) : null}
+                          {project.github_link ? (
+                            <a
+                              className="text-slate-300"
+                              href={project.github_link}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              GitHub
+                            </a>
+                          ) : null}
+                        </div>
                       </div>
-                      <p className="mt-2 text-slate-300">
-                        {project.description || ''}
-                      </p>
-                      <div className="mt-4 flex flex-wrap gap-3 text-sm">
-                        {project.live_link ? (
-                          <a
-                            className="text-amber-600"
-                            href={project.live_link}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Live
-                          </a>
-                        ) : null}
-                        {project.github_link ? (
-                          <a
-                            className="text-slate-300"
-                            href={project.github_link}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            GitHub
-                          </a>
-                        ) : null}
-                      </div>
-                    </div>
-                  ))
+                    )
+                  })
                 )}
               </div>
             </div>
@@ -302,7 +328,7 @@ const PublicPortfolio = () => {
                         <p className="text-xs uppercase tracking-widest text-slate-400">
                           {category}
                         </p>
-                        <div className="mt-3 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                        <div className="mt-3 grid gap-5 md:grid-cols-2">
                           {items.map((skill) => (
                             <div
                               key={skill.id}

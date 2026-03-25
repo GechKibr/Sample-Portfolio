@@ -16,26 +16,51 @@ const Sidebar = ({
   const initials = buildInitials(userLabel || 'Admin')
 
   return (
-    <nav className="space-y-3 ml-0 pl-0">
-      <div className="rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 shadow-lg p-4">
-        <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-full bg-slate-900 text-white flex items-center justify-center font-semibold">
+    <nav className="space-y-4">
+      <div className="overflow-hidden border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div className="border-b border-slate-200 px-4 py-4 dark:border-slate-700">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-slate-800 text-white flex items-center justify-center text-sm font-semibold">
             {initials}
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 font-semibold">
-              User
-            </p>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {userLabel || 'Admin'}
-            </p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 font-semibold">
+                Administrator
+              </p>
+              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                {userLabel || 'Admin'}
+              </p>
+            </div>
           </div>
         </div>
-        <div className="mt-6 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-700 p-4">
-          <p className="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 font-semibold">
+
+        <div className="p-4">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 font-semibold">
+            Navigation
+          </p>
+          <div className="mt-3 space-y-1.5">
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => onSelect(item)}
+                title={item.title}
+                className={`w-full text-left px-3 py-2.5 text-sm font-medium transition-colors border ${
+                  activeResource.key === item.key
+                    ? 'border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900'
+                    : 'border-transparent bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {item.title}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200 p-4 dark:border-slate-700">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 font-semibold">
             Layout
           </p>
-          <div className="mt-4">
+          <div className="mt-3">
             <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
               <span>Width</span>
               <span>{sidebarWidth}px</span>
@@ -46,35 +71,10 @@ const Sidebar = ({
               max="300"
               value={sidebarWidth}
               onChange={(event) => onWidthChange(Number(event.target.value))}
-              className="mt-2 w-full"
+              className="mt-2 h-1.5 w-full cursor-pointer appearance-none bg-slate-200 accent-slate-800 dark:bg-slate-700 dark:accent-slate-200"
             />
           </div>
         </div>
-        <p className="mt-6 text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 font-semibold">
-          Sections
-        </p>
-        <div className="mt-4 space-y-2">
-          {navItems.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => onSelect(item)}
-              title={item.title}
-              className={`w-full text-left px-4 py-2 rounded-xl font-semibold transition ${
-                activeResource.key === item.key
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
-            >
-              {item.title}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="rounded-3xl bg-gradient-to-br from-amber-500 to-amber-300 text-slate-900 p-6 shadow-xl">
-        <p className="text-xs uppercase tracking-widest font-semibold">Quick Tip</p>
-        <p className="mt-3 text-sm">
-          Fill in Profile first, then link projects and skills using the profile ID.
-        </p>
       </div>
     </nav>
   )
