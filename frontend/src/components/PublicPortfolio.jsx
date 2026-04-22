@@ -132,14 +132,14 @@ const PublicPortfolio = () => {
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-amber-300 font-semibold">
-                Portfolio
+                GK
               </p>
-              <p className="text-sm text-slate-400">Professional Profile</p>
+
             </div>
           </div>
           <nav className="flex items-center gap-4 text-sm overflow-x-auto whitespace-nowrap max-w-full">
             <a className="text-slate-300 hover:text-white" href="#overview">
-              About me 
+              About me
             </a>
             <a className="text-slate-300 hover:text-white" href="#projects">
               Projects
