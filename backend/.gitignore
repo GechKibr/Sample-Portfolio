@@ -1,0 +1,12 @@
+conf/__pycache__/
+conf/*.pyc
+conf/*.pyd
+
+myportfolio/__pycache__/
+myportfolio/*.pyc
+myportfolio/*.pyd
+myportfolio/migrations/__pycache__/
+
+profiles/
+
+.env 
